@@ -1,0 +1,17 @@
+{
+  "name": "nodejs",
+  "version": "1.0.0",
+  "description": "nodejs",
+  "main": "03_Node.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node 03_Node.js"
+  },
+  "author": "divyanshi",
+  "license": "ISC",
+  "dependencies": {
+    "fs-extra": "^11.2.0",
+    "url": "^0.11.4"
+     
+  }
+}
