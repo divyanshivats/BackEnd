@@ -2,6 +2,10 @@
 const express = require('express')
 const app = express();
 const users = require('./MOCK_DATA.json')
+const fs = require('fs')
+
+app.use(express.json())
+app.use(express.urlencoded({extended: true}))
 
 /* 
  TASKS -
@@ -18,6 +22,11 @@ const users = require('./MOCK_DATA.json')
  DELETE /users/1 - delete the user with id 1
 */
 
+app.use((req, res, next) => {
+    console.log('hello from middleware 1');
+    next(); // imp to call next function 
+    
+})
 
 // Routes -
 
@@ -56,7 +65,15 @@ app
 
 
 app.post('/api/users', (req,res) => {
-    return res.json({status: "pending!"})
+    const body = req.body //frontend body data
+    users.push({...body, id: users.length + 1});
+
+    fs.writeFile('./MOCK_DATA.json', JSON.stringify(users), (err, data) => {
+        return res.json({status: "success"})
+    })
+    console.log(body);
+    
+    
 })
 
 
