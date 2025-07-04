@@ -1,8 +1,10 @@
 // REST APIS -
 const express = require('express')
 const app = express();
-const users = require('./MOCK_DATA.json')
+// const users = require('./MOCK_DATA.json')
 const fs = require('fs')
+const mongoose = require('mongoose');
+const { type } = require('os');
 
 app.use(express.json())
 app.use(express.urlencoded({extended: true}))
@@ -28,16 +30,47 @@ app.use((req, res, next) => {
     
 })
 
-// Routes -
-
-app.get('/api/users', (req,res) => {
-     return res.json(users);
+const userSchema = new mongoose.Schema({
+    first_name: {
+        type: String,
+        required: true
+    },
+    last_name: {
+        type: String,
+        required: false
+    },
+    email: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    job_title: {
+        type: String
+    },
+    gender: {
+        type: String
+    }
 })
 
-app.get('/users', (req,res) =>{
+const User = mongoose.model('user', userSchema);
+
+mongoose.connect('mongodb://localhost:27017/youtube-tut')
+.then( () => console.log('db connected'))
+.catch(err => console.log('mongo error: ', err))
+
+// Routes -
+
+app.get('/api/users', async (req,res) => {
+    const allDbUsers = await User.find();
+    
+    return res.json(allDbUsers);
+})
+
+app.get('/users', async (req,res) =>{
+    const allDbUsers = await User.find();
     const html = `
     <ul>
-        ${users.map((user) => `<li>${user.first_name}</li>`).join("")}
+        ${allDbUsers.map((user) => `<li>${user.first_name}- ${user.email}</li>`).join("")}
     </ul>
     `
     return res.send(html)
@@ -45,9 +78,9 @@ app.get('/users', (req,res) =>{
 
 app
     .route('/api/users/:id')
-    .get((req,res) => {
-    const id = Number(req.params.id);
-    const user = users.find( (user) => user.id === id);
+    .get(async (req,res) => {
+        const user = await User.findById(req.params.id)
+   
 
     // const html = `
     // ${user.first_name}
@@ -55,24 +88,32 @@ app
 
     return res.send(user);
     })
-    .patch((req,res) => {
-    return res.json({status: "pending!"})
+    .patch(async (req,res) => {
+        await User.findByIdAndUpdate(req.params.id, {last_name: 'Changed'})
+    return res.json({status: "success"})
     })
-    .delete((req,res) => {
-    return res.json({status: "pending!"})
+    .delete(async (req,res) => {
+        await User.findByIdAndDelete(req.params.id)
+    return res.json({status: "deleted"})
     })
 
 
 
-app.post('/api/users', (req,res) => {
+app.post('/api/users',async  (req,res) => {
     const body = req.body //frontend body data
-    users.push({...body, id: users.length + 1});
+    // users.push({...body, id: users.length + 1});
 
-    fs.writeFile('./MOCK_DATA.json', JSON.stringify(users), (err, data) => {
-        return res.json({status: "success"})
+    const result = await User.create({
+        first_name: body.first_name,
+        last_name: body.last_name,
+        email: body.email,
+        gender: body.gender,
+        job_title: body.job_title
     })
-    console.log(body);
+    console.log(result);
     
+    return res.status(201).json({msg: 'success'})
+
     
 })
 
